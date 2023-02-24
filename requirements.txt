@@ -2,7 +2,5 @@ python-telegram-bot
 coloredlogs
 pillow
 watchdog
-tesserocr
 pydub
-zbarlight
 requests
