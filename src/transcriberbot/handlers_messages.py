@@ -12,7 +12,6 @@ from transcriberbot import tbfilters
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import audiotools
-import phototools
 import logging
 import traceback
 import time
@@ -249,112 +248,6 @@ def video_note(bot, update):
       process_media_voice, bot, update, vn, "video_note"
     )
 
-def process_media_photo(bot, update, photo, chat):
-  chat_id = get_chat_id(update)
-  message_id = get_message_id(update)
-  is_group = chat_id < 0
-
-  message = None
-
-  if chat["photos_enabled"] == 1:
-    message = bot.send_message(
-      chat_id=chat_id, 
-      text=R.get_string_resource("photo_recognizing", chat["lang"]), 
-      reply_to_message_id=message_id,
-      parse_mode="html",
-      is_group=is_group
-    ).result()
-
-  file_id = photo[-1].file_id
-  file_path = os.path.join(config.get_config_prop("app")["media_path"], file_id)
-  bot.get_file(file_id).download(file_path)
-
-  def process(message):
-    if chat["qr_enabled"] == 1:
-      qr = phototools.read_qr(file_path, chat["lang"])
-      if qr is not None:
-        qr = R.get_string_resource("qr_result", chat["lang"]) + "\n" + qr
-
-        if message is not None:
-          bot.edit_message_text(
-            text=qr, 
-            chat_id=chat_id, 
-            message_id=message.message_id, 
-            parse_mode="html", 
-            is_group=is_group
-          )
-          return
-        else:
-          message = bot.send_message(
-            chat_id=chat_id,
-            text=qr,
-            reply_to_message_id=message_id,
-            parse_mode="html",
-            is_group=is_group
-          ).result()
-
-    if chat["photos_enabled"] == 1:
-      text = phototools.image_ocr(file_path, chat["lang"])
-      if text is not None:
-        text = R.get_string_resource("ocr_result", chat["lang"]) + "\n" + text
-        bot.edit_message_text(
-          text=text, 
-          chat_id=chat_id, 
-          message_id=message.message_id, 
-          parse_mode="html", 
-          is_group=is_group
-        )
-        return
-
-      bot.edit_message_text(
-        text=R.get_string_resource("photo_no_text", chat["lang"]), 
-        chat_id=chat_id, 
-        message_id=message.message_id, 
-        parse_mode="html", 
-        is_group=is_group
-      )
-
-  retry = True
-  retry_num = 0
-  try:
-    while retry:
-      process(message)
-      retry = False
-
-  except telegram.error.TimedOut as t:
-    logger.error("Timeout error %s", traceback.format_exc())
-    retry_num += 1
-    if retry_num >= 3:
-      retry = False
-  
-  except telegram.error.RetryAfter as r:
-    logger.warning("Retrying after %d", r.retry_after)
-    time.sleep(r.retry_after)
-
-  except telegram.error.TelegramError as te:
-    logger.error("Telegram error %s", traceback.format_exc())
-    retry = False
-
-  except Exception as e:
-    logger.error("Exception %s", traceback.format_exc())
-    retry = False 
-  
-  finally:
-    os.remove(file_path)
-
-@message(Filters.photo)
-def photo(bot, update):
-  chat_id = get_chat_id(update)
-  chat = TBDB.get_chat_entry(chat_id)
-  if chat["qr_enabled"] == 0 and chat["photos_enabled"] == 0:
-    return
-
-  message = update.message or update.channel_post
-
-  if message.photo:
-    TranscriberBot.get().photos_thread_pool.submit(
-      process_media_photo, bot, update, message.photo, chat
-    )
 
 @message(Filters.status_update.new_chat_members)
 def new_chat_member(bot, update):
