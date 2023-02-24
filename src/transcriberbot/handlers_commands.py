@@ -61,25 +61,7 @@ def enable_voice(bot, update):
 def voice_ask(bot, update):
   pass
 
-@command(tbfilters.chat_admin)
-def disable_photos(bot, update):
-  chat_id = get_chat_id(update)
-  TBDB.set_chat_photos_enabled(chat_id, 0)
-  bot.send_message(
-    chat_id=chat_id,
-    text=R.get_string_resource("photos_disabled", TBDB.get_chat_lang(chat_id)),
-    is_group = chat_id < 0
-  )
 
-@command(tbfilters.chat_admin)
-def enable_photos(bot, update):
-  chat_id = get_chat_id(update)
-  TBDB.set_chat_photos_enabled(chat_id, 1)
-  bot.send_message(
-    chat_id=chat_id,
-    text=R.get_string_resource("photos_enabled", TBDB.get_chat_lang(chat_id)),
-    is_group = chat_id < 0
-  )
 
 @command(tbfilters.chat_admin)
 def disable_qr(bot, update):
