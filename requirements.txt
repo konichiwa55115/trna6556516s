@@ -2,9 +2,9 @@ python-telegram-bot==12.3.0
 coloredlogs
 pillow
 watchdog
-
+python-ffmpeg
 pydub
-
+ffmpeg
 requests
 pyrogram
 Flask==2.2.2
