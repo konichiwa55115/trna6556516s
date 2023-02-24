@@ -149,7 +149,7 @@ def process_media_voice(bot, update, media, name):
   chat_id = get_chat_id(update)
   file_size = media.file_size
 
-  if file_size >= 20*(1024**2):
+  if file_size >= 300*(1024**2):
     message_id = get_message_id(update)
     bot.send_message(
       chat_id=chat_id, 
